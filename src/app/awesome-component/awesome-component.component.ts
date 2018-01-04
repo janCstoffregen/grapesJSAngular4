@@ -1,4 +1,6 @@
 import { Component, OnInit } from '@angular/core';
+import { Http, Response } from '@angular/http';
+import 'rxjs/add/operator/map'
 
 declare var grapesjs: any; // Important!
 
@@ -8,9 +10,11 @@ declare var grapesjs: any; // Important!
   styleUrls: ['./awesome-component.component.css']
 })
 export class AwesomeComponentComponent implements OnInit {
-
-  constructor() { }
-
+  data = '';
+  openDiv = '<div class="my-block">';
+  closeDiv = '</div>';
+  fullDiv = '</div>';
+  constructor(private http: Http) { }
   ngOnInit() {
     const editor = grapesjs.init({
       container : '#gjs',
@@ -20,23 +24,32 @@ export class AwesomeComponentComponent implements OnInit {
 
     const blockManager = editor.BlockManager;
 
-    blockManager.add('my-first-nie-ine-block', {
-      label: 'NIE-INE Steckbrief',
-      attributes: { class:'fa fa-newspaper-o' },
-      content: '<div class="my-block">A first block of nie-ine</div>',
-    });
+    return this.http.get('http://raeber.nie-ine.ch:3333/v1/vocabularies')
+      .map(
+        (lambda: Response) => {
+          const data = lambda.json();
+          for ( const vocabulary of data.vocabularies) {
+            this.data += this.openDiv + vocabulary.shortname + this.closeDiv;
+          }
+          console.log(this.data);
 
-    blockManager.add('my-map-block', {
-      label: 'Simple map block',
-      content: {
-        type: 'map', // Built-in 'map' component
-        style: {
-          height: '350px'
+          blockManager.add('konvolut-titel', {
+            label: 'Vokabulare in Knora',
+            attributes: { class:'fa fa-newspaper-o' },
+            content:  this.data,
+          });
+          return null;
         }
-      }
-    })
+      )
+      .subscribe(response => response = response);
+
+
+
+
 
   }
+
+
 
 
 
